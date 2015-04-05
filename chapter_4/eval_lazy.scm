@@ -29,20 +29,81 @@
            (procedure-body procedure)
            (extend-environment
              (procedure-parameters procedure)
-             (lis-of-delayed-args arguments env)
+             (list-of-delayed-args arguments env)
              (procedure-environment procedure))))
          (else 
            (error "Unknown procedure type -- APPLY" procedure))))
 
-(define (list-of-arg-values ))
+(define (actual-value exp env)
+  (force-it (eval exp env)))
+
+(define (list-of-arg-values exps env)
+  (if (no-operands? exps)
+    '()
+    (cons (actual-value (first-operand exps) env)
+          (list-of-arg-values (rest-operands exps) env))))
+
+(define (list-of-delayed-args exps env)
+  (if (no-operands? exps)
+    '()
+    (cons (delay-it (first-operand exps) env)
+          (list-of-delayed-args (rest-operands exps) env))))
+
 (define (list-of-values exps env)
   (if (no-operands? exps)
     '()
     (cons (eval (first-operand exps) env)
           (list-of-values (rest-operands exps) env))))
 
+(define (delay-it exp env)
+  (list 'thunk exp env))
+(define (thunk? obj) (tagged-list? obj 'thunk))
+(define (thunk-exp obj) (cadr obj))
+(define (thunk-env obj) (caddr obj))
+
+(define (evaluated-thunk? obj)
+  (tagged-list? obj 'evaluated-thunk))
+
+(define (thunk-value evaluated-thunk) (cadr evaluated-thunk))
+
+(define (cons x y)
+  (lambda (m) (m x y)))
+(define (car z)
+  (z (lambda (p q) p)))
+(define (cdr z)
+  (z (lambda (p q) q)))
+
+(define (list-ref items n)
+  (if (= n 0)
+    (car items)
+    (list-ref (cdr items) (- n 1))))
+
+(define (map proc items)
+  (if (null? items)
+    '()
+    (cons (proc (car items))
+          (map proc (cdr items)))))
+
+;(define (force-it obj)
+;  (if (thunk? obj)
+;    (actual-value (thunk-exp obj)
+;                  (thunk-env obj))
+;    obj))
+
+(define (force-it obj)
+  (cond ((thunk? obj)
+         (let ((result (actual-value (thunk-exp obj)
+                                     (thunk-env obj))))
+           (set-car! obj 'evaluated-thunk)
+           (set-car! (cdr obj) result)
+           (set-cdr! (cdr obj) '())
+           result))
+        ((evaluated-thunk? obj)
+         (thunk-value obj))
+        (else obj)))
+
 (define (eval-if exp env)
-  (if (true? (eval (if-predicate exp) env))
+  (if (true? (actual-value (if-predicate exp) env))
     (eval (if-consequent exp) env)
     (eval (if-alternative exp) env)))
 
@@ -84,9 +145,7 @@
 ; set
 (define (assignment? exp)
   (tagged-list? exp 'set))
-
 (define (assignment-variable exp) (cadr exp))
-
 (define (assignment-value exp) (caddr exp))
 
 ; define
@@ -259,9 +318,9 @@
   (tagged-list? proc 'primitive))
 (define (primitive-implementation proc) (cadr proc))
 (define primitive-procedures
-  (list (list 'car car)
-        (list 'cdr cdr)
-        (list 'cons cons)
+  (list (list '= =)
+        (list '+ +)
+        (list '/ /)
         (list 'null? null?)))
 (define (primitive-procedure-names)
   (map car
@@ -279,8 +338,7 @@
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
-    (display input)
-    (let ((output (eval input the-global-environment)))
+    (let ((output (actual-value input the-global-environment)))
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
@@ -301,9 +359,9 @@
 
 
 ; test
-;(define the-global-environment (setup-environment))
+(define the-global-environment (setup-environment))
 
-;(driver-loop)
+(driver-loop)
 ;(define (append x y)
 ;  (if (null? x)
 ;    y
@@ -311,4 +369,9 @@
 ;          (append (cdr x) y))))
 
 ;(append '(a b c) '(d e f))
+
+(define (try a b)
+  (if (= a 0) 1 b))
+
+(try 0 (/ 1 0))
 

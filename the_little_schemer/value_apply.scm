@@ -1,4 +1,9 @@
 ; Chapter 10
+; help functios
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (null? x)))))
+
 (define new-entry build)
 
 (define lookup-in-entry
@@ -117,7 +122,7 @@
     (cond ((atom? x) (eq? x (quote else)))
           (else #f))))
 (define question-of first)
-(define question-of second)
+(define answer-of second)
 
 (define *cond
   (lambda (e table)
@@ -156,9 +161,9 @@
     (cond ((eq? name (quote cons))
            (cons (first vals) (second vals)))
           ((eq? name (quote car))
-           (car (first vals)))
+           (car (first vals) (second vals)))
           ((eq? name (quote cdr))
-           (cdr (first vals)))
+           (cdr (first vals) (second vals)))
           ((eq? name (quote null?))
            (null? (first vals)))
           ((eq? name (quote eq?))

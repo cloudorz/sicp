@@ -4,6 +4,17 @@
   (lambda (x)
     (and (not (pair? x)) (not (null? x)))))
 
+(define lat? 
+  (lambda (l)
+    (cond ((null? l) #t)
+          (and (atom? (car l)) (lat? (cdr l))))))
+
+(define member?
+  (lambda (a lat)
+    (cond ((null? lat) #f)
+          (or (eq? a (car lat))
+              (member? a (cdr lat))))))
+
 (define new-entry build)
 
 (define lookup-in-entry

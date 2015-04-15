@@ -15,6 +15,14 @@
           (or (eq? a (car lat))
               (member? a (cdr lat))))))
 
+(define add1
+  (lambda (n)
+    (+ n 1)))
+
+(define sub1
+  (lambda (n)
+    (- n 1)))
+
 (define new-entry build)
 
 (define lookup-in-entry

@@ -4,6 +4,10 @@
   (lambda (x)
     (and (not (pair? x)) (not (null? x)))))
 
+(define build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 (quote ())))))
+
 (define lat? 
   (lambda (l)
     (cond ((null? l) #t)

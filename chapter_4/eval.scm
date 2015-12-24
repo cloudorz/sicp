@@ -1,69 +1,70 @@
-;; evalutor
-; eval
-(define (eval exp env)
-  (cond ((self-evaluating? exp) exp)
+;; PS: run on DrRacket R5Rs
+
+;; eval_utor
+; eval_
+(define (eval_ exp env)
+  (cond ((self-eval_uating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
         ((quoted? exp) (text-of-quotation exp))
-        ((assignment? exp) (eval-assignment exp env))
-        ((definition? exp) (eval-definition exp env))
-        ((if? exp) (eval-if exp env))
+        ((assignment? exp) (eval_-assignment exp env))
+        ((definition? exp) (eval_-definition exp env))
+        ((if? exp) (eval_-if exp env))
         ((lambda? exp)
          (make-procedure (lambda-parameters exp)
                          (lambda-body exp)
                          env))
         ((begin? exp)
-         (eval-sequence (begin-actions exp) env))
-        ((cond? exp) (eval (cond-if exp) env))
+         (eval_-sequence (begin-actions exp) env))
+        ((cond? exp) (eval_ (cond->if exp) env))
         ((application? exp)
-         (apply (eval (operator exp) env)
+         (apply_ (eval_ (operator exp) env)
                 (list-of-values (operands exp) env)))
         (else 
-          (error "Unknown expression type -- EVAL" exp))))
+          (error "Unknown expression type -- eval_" exp))))
 
 ; apply
-(define apply-in-underlying-scheme apply)
-(define (apply procedure arguments) 
+(define (apply_ procedure arguments) 
   (cond ((primitive-procedure? procedure)
-         (apply-primitive-procedure procedure arguments))
+         (apply_-primitive-procedure procedure arguments))
         ((compound-procedure? procedure)
-         (eval-sequence
+         (eval_-sequence
            (procedure-body procedure)
            (extend-environment
              (procedure-parameters procedure)
              arguments
              (procedure-environment procedure))))
          (else 
-           (error "Unknown procedure type -- APPLY" procedure))))
+           (error "Unknown procedure type -- apply_" procedure))))
 
 (define (list-of-values exps env)
   (if (no-operands? exps)
     '()
-    (cons (eval (first-operand exps) env)
+    (cons (eval_ (first-operand exps) env)
           (list-of-values (rest-operands exps) env))))
 
-(define (eval-if exp env)
-  (if (true? (eval (if-predicate exp) env))
-    (eval (if-consequent exp) env)
-    (eval (if-alternative exp) env)))
+(define (eval_-if exp env)
+  (if (true? (eval_ (if-predicate exp) env))
+    (eval_ (if-consequent exp) env)
+    (eval_ (if-alternative exp) env)))
 
-(define (eval-sequence exps env)
-  (cond ((last-exp? exps) (eval (first-exp exps) env))
-        (else (eval (first-exp exps) env)
-              (eval-sequence (rest-exps exps) env))))
+(define (eval_-sequence exps env)
+  (cond ((last-exp? exps) (eval_ (first-exp exps) env))
+        (else (eval_ (first-exp exps) env)
+              (eval_-sequence (rest-exps exps) env))))
 
-(define (eval-assignment exp env)
+(define (eval_-assignment exp env)
   (set-variable-value! (assignment-variable exp)
-                       (eval (assignment-value exp) env)
+                       (eval_ (assignment-value exp) env)
                        env)
   'ok)
 
-(define (eval-definition exp env)
+(define (eval_-definition exp env)
   (define-variable! (definition-variable exp)
-                    (eval (definition-value exp) env)
+                    (eval_ (definition-value exp) env)
                     env))
 
-; self evaluating
-(define (self-evaluating? exp)
+; self eval_uating
+(define (self-eval_uating? exp)
   (cond ((number? exp) true)
         ((string? exp) true)
         (else false)))
@@ -164,6 +165,8 @@
                      (expand-clauses rest))))))
 
 ; bool
+(define false #f)
+(define true #t)
 (define (true? x)
   (not (eq? x false)))
 
@@ -251,6 +254,7 @@
 ;(define the-global-environment (setup-environment))
 
 ; primitive procedure
+(define apply-in-underlying-scheme apply)
 (define (primitive-procedure? proc)
   (tagged-list? proc 'primitive))
 (define (primitive-implementation proc) (cadr proc))
@@ -265,18 +269,27 @@
 (define (primitive-procedure-objects)
   (map (lambda (proc) (list 'primitive (cadr proc)))
        primitive-procedures))
-(define (apply-primitive-procedure proc args)
+(define (apply_-primitive-procedure proc args)
   (apply-in-underlying-scheme (primitive-implementation proc)
                               args))
 
-(define input-prompt ";;; M-Eval input:")
-(define output-prompt ";;; M-Eval value:")
+(define input-prompt ";;; M-eval_ input:")
+(define output-prompt ";;; M-eval_ value:")
 
+(define (error reason . args)
+  (display "Error: ")
+  (display reason)
+  (for-each (lambda (arg) (display " ") (write arg))
+            args)
+  (newline)
+  (scheme-report-environment -1))  ;; we hope that this will signal an error
+
+(define the-global-environment (setup-environment))
 (define (driver-loop)
   (prompt-for-input input-prompt)
   (let ((input (read)))
     (display input)
-    (let ((output (eval input the-global-environment)))
+    (let ((output (eval_ input the-global-environment)))
       (announce-output output-prompt)
       (user-print output)))
   (driver-loop))
@@ -297,7 +310,6 @@
 
 
 ; test
-;(define the-global-environment (setup-environment))
 
 ;(driver-loop)
 ;(define (append x y)

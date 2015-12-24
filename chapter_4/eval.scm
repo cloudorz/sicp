@@ -1,9 +1,9 @@
 ;; PS: run on DrRacket R5Rs
 
-;; eval_utor
+;; evalutor
 ; eval_
 (define (eval_ exp env)
-  (cond ((self-eval_uating? exp) exp)
+  (cond ((self-evaluating? exp) exp)
         ((variable? exp) (lookup-variable-value exp env))
         ((quoted? exp) (text-of-quotation exp))
         ((assignment? exp) (eval_-assignment exp env))
@@ -64,7 +64,7 @@
                     env))
 
 ; self eval_uating
-(define (self-eval_uating? exp)
+(define (self-evaluating? exp)
   (cond ((number? exp) true)
         ((string? exp) true)
         (else false)))

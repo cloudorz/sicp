@@ -11,21 +11,20 @@
 (define lat? 
   (lambda (l)
     (cond ((null? l) #t)
-          (and (atom? (car l)) (lat? (cdr l))))))
+          (else 
+            (and (atom? (car l)) (lat? (cdr l)))))))
 
 (define member?
   (lambda (a lat)
     (cond ((null? lat) #f)
-          (or (eq? a (car lat))
-              (member? a (cdr lat))))))
+          (else (or (eq? a (car lat))
+                    (member? a (cdr lat)))))))
 
 (define add1
-  (lambda (n)
-    (+ n 1)))
+  (lambda (n) (+ n 1)))
 
 (define sub1
-  (lambda (n)
-    (- n 1)))
+  (lambda (n) (- n 1)))
 
 (define new-entry build)
 
@@ -40,7 +39,7 @@
   (lambda (name names values entry-f)
     (cond ((null? names) (entry-f name))
           ((eq? name (car names))
-           (car values))
+           (car nvalues))
           (else (lookup-in-entry-help name 
                                       (cdr names) 
                                       (cdr values)
@@ -216,3 +215,4 @@
              (extend-table (new-entry (formals-of closure)
                                       vals)
                            (table-of closure)))))
+

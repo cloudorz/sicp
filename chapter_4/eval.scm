@@ -61,7 +61,8 @@
 (define (eval_-definition exp env)
   (define-variable! (definition-variable exp)
                     (eval_ (definition-value exp) env)
-                    env))
+                    env)
+  'ok)
 
 ; self eval_uating
 (define (self-evaluating? exp)

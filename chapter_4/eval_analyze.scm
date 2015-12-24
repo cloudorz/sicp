@@ -1,6 +1,6 @@
 ;; PS: run on DrRacket R5Rs
 
-;; eval_utor
+;; evalutor
 ; eval_
 (define (eval_ exp env)
   ((analyze exp) env))

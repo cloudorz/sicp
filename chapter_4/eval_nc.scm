@@ -2,8 +2,6 @@
 
 ;; evalutor
 ; ambeval
-(define (ambeval exp env)
-  ((analyze exp) env))
 (define (ambeval exp env succeed fail)
   ((analyze exp) env succeed fail))
 
@@ -20,6 +18,7 @@
         ((lambda? exp) (analyze-lambda exp))
         ((begin? exp) (analyze-sequence (begin-actions exp)))
         ((cond? exp) (analyze (cond->if exp)))
+        ((let? exp) (analyze (let->combination exp)))
         ((application? exp) (analyze-application exp))
         (else
           (error "Unknown expression type -- ANALYZE" exp))))
@@ -135,7 +134,7 @@
 
 (define (execute-application proc args succeed fail)
   (cond ((primitive-procedure? proc)
-         (succeed (apply-primitive-procedure proc args)
+         (succeed (apply_-primitive-procedure proc args)
                   fail))
         ((compound-procedure? proc)
          ((procedure-body proc)
@@ -198,7 +197,7 @@
 
 ; assignment
 (define (assignment? exp)
-  (tagged-list? exp 'set))
+  (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
 (define (assignment-value exp) (caddr exp))
 
@@ -221,6 +220,14 @@
 (define (lambda-body exp) (cddr exp))
 (define (make-lambda parameters body)
   (cons 'lambda (cons parameters body)))
+
+; let
+(define (let? exp) (tagged-list? exp 'let))
+(define (let-bindings exp) (cadr exp))
+(define (let-body exp) (cddr exp))
+(define (let->combination exp) 
+  (let ((block (make-lambda (map car (let-bindings exp)) (let-body exp))))
+    (cons block (map cadr (let-bindings exp)))))
 
 ; if
 (define (if? exp) (tagged-list? exp 'if))
@@ -308,12 +315,6 @@
                              (try-next (cdr choices))))))
       (try-next cprocs))))
 
-(define (require p)
-  (if (not p) (amb)))
-
-(define (an-element-of items)
-  (require (not (null? items)))
-  (amb (car items) (an-element-of (cdr items))))
 
 (define (amb? exp) (tagged-list? exp 'amb))
 (define (amb-choices exp) (cdr exp))
@@ -398,6 +399,15 @@
   (list (list 'car car)
         (list 'cdr cdr)
         (list 'cons cons)
+        (list 'member member)
+        (list 'memq memq)
+        (list 'not not)
+        (list 'list list)
+        (list 'abs abs)
+        (list '> >)
+        (list '< <)
+        (list '= =)
+        (list '- -)
         (list 'null? null?)))
 (define (primitive-procedure-names)
   (map car
@@ -475,3 +485,96 @@
 ;(append '(a b c) '(d e f))
 
 
+;; Logic puzzles
+;(define (require p)
+;  (if (not p) (amb)))
+
+;(define (an-element-of items)
+;  (require (not (null? items)))
+;  (amb (car items) (an-element-of (cdr items))))
+;
+;(define (distinct? items)
+;  (cond ((null? items) true)
+;        ((null? (cdr items)) true)
+;        ((member (car items) (cdr items)) false)
+;        (else (distinct? (cdr items)))))
+;
+;(define (multiple-dwelling)
+;  (let ((baker (amb 1 2 3 4 5))
+;        (cooper (amb 1 2 3 4 5))
+;        (fletcher (amb 1 2 3 4 5))
+;        (miller (amb 1 2 3 4 5))
+;        (smith (amb 1 2 3 4 5)))
+;    (require
+;     (distinct? (list baker cooper fletcher miller smith)))
+;    (require (not (= baker 5)))
+;    (require (not (= cooper 1)))
+;    (require (not (= fletcher 5)))
+;    (require (not (= fletcher 1)))
+;    (require (> miller cooper))
+;    (require (not (= (abs (- smith fletcher)) 1)))
+;    (require (not (= (abs (- fletcher cooper)) 1)))
+;    (list (list 'baker baker)
+;          (list 'cooper cooper)
+;          (list 'fletcher fletcher)
+;          (list 'miller miller)
+;          (list 'smith smith))))
+; (multiple-dwelling)
+
+
+;; Parsing nature language
+;(define nouns '(noun student professor cat class))
+;(define verbs '(verb studies lectures eats sleeps))
+;(define articles '(article the a))
+;
+;;(define (parse-sentence)
+;;  (list 'sentence
+;;         (parse-noun-phrase)
+;;         (parse-word verbs)))
+;
+;(define (parse-noun-phrase)
+;  (list 'noun-phrase
+;        (parse-word articles)
+;        (parse-word nouns)))
+;
+;(define (parse-word word-list)
+;  (require (not (null? *unparsed*)))
+;  (require (memq (car *unparsed*) (cdr word-list)))
+;  (let ((found-word (car *unparsed*)))
+;    (set! *unparsed* (cdr *unparsed*))
+;    (list (car word-list) found-word)))
+;
+;(define *unparsed* '())
+;(define (parse input)
+;  (set! *unparsed* input)
+;  (let ((sent (parse-sentence)))
+;    (require (null? *unparsed*))
+;    sent))
+;
+;(define prepositions '(prep for to in by with))
+;(define (parse-sentence)
+;  (list 'sentence
+;         (parse-noun-phrase)
+;         (parse-verb-phrase)))
+;(define (parse-verb-phrase)
+;  (define (maybe-extend verb-phrase)
+;    (amb verb-phrase
+;         (maybe-extend (list 'verb-phrase
+;                             verb-phrase
+;                             (parse-prepositional-phrase)))))
+;  (maybe-extend (parse-word verbs)))
+;
+;(define (parse-simple-noun-phrase)
+;  (list 'simple-noun-phrase
+;        (parse-word articles)
+;        (parse-word nouns)))
+;(define (parse-noun-phrase)
+;  (define (maybe-extend noun-phrase)
+;    (amb noun-phrase
+;         (maybe-extend (list 'noun-phrase
+;                             noun-phrase
+;                             (parse-prepositional-phrase)))))
+;  (maybe-extend (parse-simple-noun-phrase)))
+
+;(parse '(the student with the cat sleeps in the class))
+;(parse '(the professor lectures to the student with the cat))

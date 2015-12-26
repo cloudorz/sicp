@@ -96,7 +96,7 @@
 
 ; assignment
 (define (assignment? exp)
-  (tagged-list? exp 'set))
+  (tagged-list? exp 'set!))
 (define (assignment-variable exp) (cadr exp))
 (define (assignment-value exp) (caddr exp))
 
@@ -306,8 +306,8 @@
 (define (thunk-env thunk) (caddr thunk))
 
 ; driver loop
-(define input-prompt ";;; M-eval_ input:")
-(define output-prompt ";;; M-eval_ value:")
+(define input-prompt ";;; L-eval_ input:")
+(define output-prompt ";;; L-eval_ value:")
 
 (define (error reason . args)
   (display "Error: ")

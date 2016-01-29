@@ -283,7 +283,7 @@
   (for-each (lambda (arg) (display " ") (write arg))
             args)
   (newline)
-  (scheme-report-environment -1))  ;; we hope that this will signal an error
+  (scheme-report-environment 5))  ;; we hope that this will signal an error
 
 (define the-global-environment (setup-environment))
 (define (driver-loop)

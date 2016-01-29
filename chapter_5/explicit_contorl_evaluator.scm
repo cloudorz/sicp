@@ -1,5 +1,64 @@
 ;; DrRacket R5RS
 
+(load "register_machine.scm")
+(load "../chapter_4/eval.scm")
+
+;; Helpers
+(define the-global-environment (setup-environment))
+(define (empty-arglist) '())
+(define (adjoin-arg arg arglist)
+  (append arglist (list arg)))
+(define (last-operand? ops)
+  (null? (cdr ops)))
+(define (no-more-exps? seq) (null? seq))
+(define (get-global-environment)
+  the-global-environment)
+  
+(define eceval-operations
+  (list (list 'self-evaluating? self-evaluating?)
+        (list 'read read)
+        (list 'get-global-environment get-global-environment)
+        (list 'announce-output announce-output)
+        (list 'user-print user-print)
+        (list 'variable? variable?)
+        (list 'quoted? quoted?)
+        (list 'assignment? assignment?)
+        (list 'definition? definition?)
+        (list 'if? if?)
+        (list 'lambda? lambda?)
+        (list 'begin? begin?)
+        (list 'application? application?)
+        (list 'lookup-variable-value lookup-variable-value)
+        (list 'text-of-quotation text-of-quotation)
+        (list 'lambda-parameters lambda-parameters)
+        (list 'lambda-body lambda-body)
+        (list 'make-procedure make-procedure)
+        (list 'operands operands)
+        (list 'operator operator)
+        (list 'empty-arglist empty-arglist)
+        (list 'no-operands? no-operands?)
+        (list 'first-operand first-operand)
+        (list 'adjoin-arg adjoin-arg)
+        (list 'rest-operands rest-operands)
+        (list 'primitive-procedure? primitive-procedure?)
+        (list 'compound-procedure? compound-procedure?)
+        (list 'apply-primitive-procedure apply_-primitive-procedure)
+        (list 'procedure-parameters procedure-parameters)
+        (list 'procedure-environment procedure-environment)
+        (list 'extend-environment extend-environment)
+        (list 'procedure-body procedure-body)
+        (list 'begin-actions begin-actions)
+        (list 'first-exp first-exp)
+        (list 'last-exp? last-exp?)
+        (list 'rest-exps rest-exps)
+        (list 'if-predicate if-predicate)
+        (list 'if-alternative if-alternative)
+        (list 'if-consequent if-consequent)
+        (list 'assignment-variable assignment-variable)
+        (list 'assignment-value assignment-value)
+        (list 'set-variable-value! set-variable-value!)
+        (list 'user-print user-print)))
+
 (define eceval
   (make-machine
    '(exp env val proc argl continue unev)
@@ -204,12 +263,6 @@
       (goto (label read-eval-print-loop))
    )))
 
-(define eceval-operations
-  (list (list 'self-evaluating? self-evaluating)
-        <complete list of operations for eceval machine>))
-
-(define the-global-environment (setup-environment))
-
 (start eceval)
 ;;; EC-Eval input:
 (define (append x y)
@@ -224,13 +277,4 @@ ok
 ;;; EC-Eval value:
 (a b c d e f)
 
-;; Helpers
-(define (empty-arglist) '())
-(define (adjoin-arg arg arglist)
-  (append arglist (list arg)))
-(define (last-operand? ops)
-  (null? (cdr ops)))
-(define (no-more-exps? seq) (null? seq)
-(define (get-global-environment)
-  the-global-environment)
 

@@ -57,7 +57,13 @@
         (list 'assignment-variable assignment-variable)
         (list 'assignment-value assignment-value)
         (list 'set-variable-value! set-variable-value!)
-        (list 'user-print user-print)))
+        (list 'user-print user-print)
+        (list 'prompt-for-input prompt-for-input)
+        (list 'last-operand? last-operand?)
+        (list 'true? true?)
+        (list 'definition-variable definition-variable)
+        (list 'definition-value definition-value)
+        (list 'define-variable! define-variable!)))
 
 (define eceval
   (make-machine
@@ -250,6 +256,22 @@
        (op set-variable-value!) (reg unev) (reg val) (reg env))
       (assign val (const ok))
       (goto (reg continue))
+    ev-definition
+      (assign unev (op definition-variable) (reg exp))
+      (save unev)                   ; save variable for later
+      (assign exp (op definition-value) (reg exp))
+      (save env)
+      (save continue)
+      (assign continue (label ev-definition-1))
+      (goto (label eval-dispatch))  ; evaluate the definition value
+    ev-definition-1
+      (restore continue)
+      (restore env)
+      (restore unev)
+      (perform
+       (op define-variable!) (reg unev) (reg val) (reg env))
+      (assign val (const ok))
+      (goto (reg continue))
     ;; Error process
     unknown-expression-type
       (assign val (const unknown-expression-type-error))
@@ -263,18 +285,18 @@
       (goto (label read-eval-print-loop))
    )))
 
-(start eceval)
+;(start eceval)
 ;;; EC-Eval input:
-(define (append x y)
-  (if (null? x)
-      y
-      (cons (car x)
-            (append (cdr x) y))))
+;(define (append x y)
+;  (if (null? x)
+;      y
+;      (cons (car x)
+;            (append (cdr x) y))))
 ;;; EC-Eval value:
-ok
+;ok
 ;;; EC-Eval input:
-(append '(a b c) '(d e f))
+;(append '(a b c) '(d e f))
 ;;; EC-Eval value:
-(a b c d e f)
+;(a b c d e f)
 
 
